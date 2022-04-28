@@ -51,6 +51,7 @@ int main()
 		//printf("\n");
 		i++;
     }
+	/*
 	// membuat matriks lebih sederhara
 	int k,l;
 	int m = 0;
@@ -62,7 +63,7 @@ int main()
 			m++;
 		}
 	printf("\n");
-	}
+	}*/
 	
 
 	// display matriks yang lebih sederhana
