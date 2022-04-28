@@ -27,11 +27,11 @@ int main()
         f = fopen(filename,"r");
 	}
 
-	// membaca ukuran matriks
+	// memisahkan variabel matriks
     char variabel[10];
 	char A,B,C,D,F;
     fgets(variabel,10,f);
-    printf("variabel yang digunakan adalah %s",variabel);
+    printf("variabel yang digunakan adalah %s\n",variabel);
 
 	// membaca matriks pada file dan memindahkan pada program
 	char buffer[BUFFER_SIZE], *token;
@@ -45,13 +45,27 @@ int main()
 		{
 			mat[i][j] = atoi(token);
 			token = strtok(NULL, ",");
-			printf("%d",mat[i][j]);
+			//printf("%d",mat[i][j]);
 			j++;
 		}
-		printf("\n");
+		//printf("\n");
 		i++;
     }
 	// membuat matriks lebih sederhara
+	int k,l;
+	int m = 0;
+	int matsmpl[4][4];
+	for(k = 0; k < 4; k++){
+		for(l = 0;l < 4;l++){
+			matsmpl[k][l] = mat[m][4];
+			printf("%d",matsmpl[k][l]);
+			m++;
+		}
+	printf("\n");
+	}
+	
+
+	// display matriks yang lebih sederhana
 	
 	fclose(f);
 	return 0;
