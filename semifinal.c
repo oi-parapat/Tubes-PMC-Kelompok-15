@@ -453,7 +453,7 @@ void func()         //displays the minimized function in SOP form
 {
     struct node* temp;
     temp = fin;
-    printf("\n\nThe minimized function is :- ");
+    printf("\n\nThe minimized function is : ");
     while (temp != NULL)
     {
         printf("%s", temp->term);
