@@ -3,7 +3,6 @@
 LOGIC MINIMIZATION
 coba coba*/
 #include<stdio.h>
-<<<<<<< HEAD
 #include<stdlib.h>
 #include<string.h>
 #define BUFFER_SIZE 256
@@ -57,7 +56,5 @@ int main()
 	fclose(f);
 	return 0;
 }
-=======
 
 //richard here
->>>>>>> 6468741c1a578ac0cdbcc8d4a1f90070e5491498
