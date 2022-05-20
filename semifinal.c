@@ -477,7 +477,6 @@ void convert()          // Konversi notasi biner setiap term ke variabel
                 j++;
             }
         }
-        j++;
         temp = temp->right;
     }
 }
