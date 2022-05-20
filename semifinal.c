@@ -11,7 +11,6 @@
 *Deskripsi        : Program Minimalisasi Fungsi Logika dengan metode Quine-Mccluskey
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #define YELLOW "\033[0;33m"
@@ -26,26 +25,26 @@ struct node
 
 struct node* root, * head, * improot, * save, * fin;
 int var, min, number = 1, columns = 2, check = 1, limit, imptable[100][100], counter = 0, essential[1000], t = 0, no = 0, minterms[1000];
-char capital[26], complement[26];       //variable names are stored as alphabets, can be modified to work for more variables
+char capital[27], complement[27];       // Nama variabel disimpan dalam bentuk array alfabet
 
-void arrange();                         //the minterms are arranged according to their magnitude
-void swap(struct node*, struct node*);  //data of two nodes is swapped
-void store_minterms();                  //minterms are stored in an array
-void group1();                          //the minterms are grouped according to the number of ones
-void further_groupings();               //the minterms are paired
-void disp();                            //various column with pairings are displayed
+void arrange();                         // Minterm diatur berdasarkan besarnya
+void swap(struct node*, struct node*);  // Data dari dua node ditukar posisinya
+void arr_minterms();                    // Minterm disimpan dalam array
+void first_groupings();                 // Minterm dikelompokkan berdasarkan jumlah angka 1 di notasi binernya
+void next_groupings();                  // Setiap minterm dipasangkan bila mungkin 
+void display();                         // Berbagai kolom dengan pasangan-pasangannya ditampilkan
 
-void end_loop(struct node*);            //the extra node in a list is deleted
-void collect();                         //converts the term from binary notation to variables (OUTPUT)
-void implicants(struct node*);          //initializes each term as an implicant
-void display_implicants();              //the implicants are displayed
-void variables();                       //the variables for the function are stored
-void implicants_table();                //the prime implicants table is formed and essential implicants are found
-void other_implicants();                //the prime implicants other than the essential ones are collected
-void final_terms();                     //the final terms in the minimized function are noted
+void loop_end(struct node*);            // Node ekstra dihapus
+void filter();                          // Mengurangi implikan utama yang muncul lebih dari sekali menjadi satu kali
+void implicants(struct node*);          // Inisialisasi setiap term sebagai implikan
+void display_imp();                     // Implikan-implikan ditampilkan
+void variables();                       // Variabel fungsi disimpan
+void imp_table();                       // Pembuatan tabel implikan utama dan implikan utama esensial
+void other_imp();                       // Implikan utama selain implikan esensial dikumpulkan
+void term_final();                      // Term final dicatat
 
-void convert();                 //reduces the prime implicants which occur more than once to one ??
-void function();                //the minimized function is displayed (OUTPUT)
+void convert();                 // Konversi term ke variabel
+void function();                // Fungsi yang telah diminimisasi ditampilkan
 
 int main()
 {
@@ -114,25 +113,25 @@ int main()
     temp->right = NULL; // Ujung node adalah NULL
 
     arrange();          //Pemanggilan fungsi-fungsi menurut kebutuhannya
-    store_minterms();
-    group1();
-    disp();
-    end_loop(root);
+    arr_minterms();
+    first_groupings();
+    display();
+    loop_end(root);
     head = (struct node*)malloc(sizeof(struct node));
     while (check > 0)
     {
-        further_groupings();
+        next_groupings();
     }
     save->right = NULL;          // Menyimpan nilai NULL di link field of list yang menyimpan implikan utama
     printf("Tidak ada pasangan yang terbentuk sehingga tidak diperlukan perhitungan lebih lanjut\n\n");
-    end_loop(improot);
-    collect();
-    display_implicants();
+    loop_end(improot);
+    filter();
+    display_imp();
     variables();
-    implicants_table();
-    other_implicants();
-    final_terms();
-    end_loop(fin);
+    imp_table();
+    other_imp();
+    term_final();
+    loop_end(fin);
     convert();
     function();
     return 0;
@@ -181,7 +180,7 @@ void swap(struct node* temp1, struct node* temp2)        // Fungsi menukar semua
     temp2->data[0] = x;
 }
 
-void store_minterms()       //Array untuk menyimpan seluruh minterm
+void arr_minterms()       //Array untuk menyimpan seluruh minterm
 {
     int i = 0;
     struct node* temp;
@@ -194,7 +193,7 @@ void store_minterms()       //Array untuk menyimpan seluruh minterm
     }
 }
 
-void group1()       // Minterms diatur sesuai dengan jumlah angka 1 pada notasi biner
+void first_groupings()       // minterms diatur sesuai dengan jumlah angka 1 pada notasi biner
 {
     int i, count = 0, j, k = 0;
     struct node* temp, * next;
@@ -223,7 +222,7 @@ void group1()       // Minterms diatur sesuai dengan jumlah angka 1 pada notasi 
     next->right = NULL;
 }
 
-void disp()     // Untuk menampilkan berbagai kolom dengan pasangannya
+void display()     // Untuk menampilkan berbagai kolom dengan pasangannya
 {
     int i, j = min;
     struct node* temp;
@@ -242,9 +241,8 @@ void disp()     // Untuk menampilkan berbagai kolom dengan pasangannya
     temp->right = NULL;
     number++;
 }
-//---------------------------------------------------------------------------------------------------//
 
-void end_loop(struct node* ptr)         // Mengurangi jumlah node dalam list dengan satu node tambahan
+void loop_end(struct node* ptr)         // Mengurangi jumlah node dalam list dengan satu node tambahan (NULL)
 {
     struct node* temp;
     temp = ptr;
@@ -255,7 +253,7 @@ void end_loop(struct node* ptr)         // Mengurangi jumlah node dalam list den
     temp->right = NULL;
 }
 
-void further_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan notasi biner
+void next_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan notasi biner
 {
     int i, count, k, j, x;
     struct node* temp, * next, * p, * imp;
@@ -337,7 +335,7 @@ void further_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan 
 
     if (check != 0)
     {
-        end_loop(head);     // Node ekstra dihapus
+        loop_end(head);     // Node ekstra dihapus
     }
     temp = root;
     while (temp != NULL)           // Loop untuk memilih iplikan utama
@@ -374,7 +372,7 @@ void implicants(struct node* ptr)       // Inisialisasi setiap term sebagai impl
     }
 }
 
-void display_implicants()       // Menampilkan seluruh implikannya
+void display_imp()       // Menampilkan seluruh implikannya
 {
     int i = 0;
     struct node* temp;
@@ -410,7 +408,7 @@ void display_implicants()       // Menampilkan seluruh implikannya
     }
 }
 
-void collect()          // Mengurangi term yang muncul lebih dari satu kali menjadi sekali
+void filter()          // Mengurangi term yang muncul lebih dari satu kali menjadi sekali
 {
     int common = 0, i;
     struct node* temp1, * temp2, * temp3;
@@ -479,6 +477,7 @@ void convert()          // Konversi notasi biner setiap term ke variabel
                 j++;
             }
         }
+        j++;
         temp = temp->right;
     }
 }
@@ -500,7 +499,7 @@ void function()         //Menampilkan fungsi yang telah diminimisasi dalam bentu
     printf("\n\n");
 }
 
-void implicants_table()         // Fungsi untuk membuat tabel implikan utama sekaligus memilih implikan utama esensial
+void imp_table()         // Fungsi untuk membuat tabel implikan utama sekaligus memilih implikan utama esensial
 {
     struct node* temp;
     int i, j, k, m, n, x, y, count = 0, count2 = 0, a = 0;
@@ -605,7 +604,7 @@ void implicants_table()         // Fungsi untuk membuat tabel implikan utama sek
     i = 0;
 }
 
-void other_implicants()     // Setelah menemukan implikan prima esensial, term lain yang diperlukan ditandai
+void other_imp()     // Setelah menemukan implikan prima esensial, term lain yang diperlukan ditandai
 {
     no = 0;           // Untuk mengecek apakah ada term yang ditemukan pada tiap iterasi
     int count1 = 0, count2 = 0;
@@ -641,11 +640,11 @@ void other_implicants()     // Setelah menemukan implikan prima esensial, term l
     essential[t] = -1;
     if (no > 0)            // Jika satu atau lebih istilah ditemukan, fungsi dipanggil lagi (rekursi)
     {
-        other_implicants();
+        other_imp();
     }
 }
 
-void final_terms()          // Dalam fungsi ini semua term dalam fungsi yang diminimalkan disimpan di linked list
+void term_final()          // Dalam fungsi ini semua term dalam fungsi yang diminimalkan disimpan di linked list
 {
     int i = 0, j, c = 0, x;
     struct node* temp, * ptr;
@@ -675,3 +674,4 @@ void final_terms()          // Dalam fungsi ini semua term dalam fungsi yang dim
     }
     temp->right = NULL;
 }
+
