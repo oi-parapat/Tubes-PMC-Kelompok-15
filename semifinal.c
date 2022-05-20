@@ -1,5 +1,21 @@
+/*EL2006 Pemecahan Masalah dengan C 2021/2022
+*Modul            : Logic Minimization
+*Percobaan        : 1
+*Hari dan Tanggal : Kamis, 28 April 2022
+*Kelompok         : 15
+*Anggota          : 18320030 - Oi
+                    18320032 - Ilsa Rostiana
+                    18320034 - Richard Albertus Moektijaya
+                    18320042 - Rd. Elviana La’salina Muhlis
+*Nama File        : Final.c
+*Deskripsi        : Program Minimalisasi Fungsi Logika dengan metode Quine-Mccluskey
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
+#define YELLOW "\033[0;33m"
+#define RESET "\x1b[0m"
 
 struct node
 {
@@ -10,47 +26,58 @@ struct node
 
 struct node* root, * head, * improot, * save, * fin;
 int var, min, number = 1, columns = 2, check = 1, limit, imptable[100][100], counter = 0, essential[1000], t = 0, no = 0, minterms[1000];
-char a[26], b[26];     
+char a[26], b[26];       //variable names are stored as alphabets, can be modified to work for more variables
 
-void group1();        
-void arrange();         
-void swap(struct node*, struct node*);           
-void disp();            
-void further_groupings();           
-void end_loop(struct node*);            
-void display_implicants();             
-void implicants(struct node*);          
-void collect();                 
-void variables();       
-void convert();             
-void implicants_table();     
-void func();                
-void other_implicants();        
-void final_terms();     
-void store_minterms();      
+void arrange();                         //the minterms are arranged according to their magnitude
+void swap(struct node*, struct node*);  //data of two nodes is swapped
+void store_minterms();                  //minterms are stored in an array
+void group1();                          //the minterms are grouped according to the number of ones
+void further_groupings();               //the minterms are paired
+void disp();                            //various column with pairings are displayed
+
+void end_loop(struct node*);            //the extra node in a list is deleted
+void collect();                         //converts the term from binary notation to variables (OUTPUT)
+void implicants(struct node*);          //initializes each term as an implicant
+void display_implicants();              //the implicants are displayed
+void variables();               //the variables for the function are stored
+void implicants_table();        //the prime implicants table is formed and essential implicants are found
+void other_implicants();    //the prime implicants other than the essential ones are collected
+void final_terms();         //the final terms in the minimized function are noted
+
+void convert();             //reduces the prime implicants which occur more than once to one ??
+void func();                //the minimized function is displayed (OUTPUT)
 
 int main()
 {
     int i, j, k, x;
     struct node* temp;
-    printf("\nEnter the number of variables : ");      
+    printf(YELLOW "\n[ PROGRAM LOGIC MINIMIZATION - QUINE MCCLUSKEY]\n" RESET);
+
+    // Input jumlah variabel
+    printf("\nJumlah Variabel: ");
     scanf("%d", &var);
-    printf("\nEnter the number of minterms : ");
+
+    // Input jumlah minterm
+    printf("\nJumlah Minterm: ");
     scanf("%d", &min);
+
     i = min - 1;
-    root = temp = (struct node*)malloc(sizeof(struct node));
-    printf("\nEnter the minterms one by one\n\n");
-    scanf("%d", &temp->data[0]);                     //first minterm is stored
+    root = temp = (struct node*)malloc(sizeof(struct node)); // Alokasi memori temp untuk minterm
+
+    // Input setiap minterm
+    printf("\nMasukkan setiap minterm, satu per satu:\n");
+    scanf("%d", &temp->data[0]);                     // Minterm pertama disimpan
+
     j = temp->data[0];
     temp->noofones = 0;
     x = var;
     k = 0;
-    while (x--)      //converts minterm to binary notation
+    while (x--)      // Konversi minterm ke notasi biner
     {
         if (j % 2 == 1)
         {
             temp->bin[k] = 1;
-            temp->noofones++;
+            temp->noofones++;   // Jumlah angka 1 dalam notasi biner dihitung
         }
         else
         {
@@ -59,20 +86,22 @@ int main()
         j = j / 2;
         k++;
     }
-    while (i--)      //rest of the minterms are stored
+
+    while (i--)      // Minterm sisanya disimpan
     {
         temp = temp->right = (struct node*)malloc(sizeof(struct node));
         scanf("%d", &temp->data[0]);
+
         j = temp->data[0];
         temp->noofones = 0;
         x = var;
         k = 0;
-        while (x--)
+        while (x--)                  // Konversi minterm lainnya ke notasi biner
         {
-            if (j % 2 == 1)          //converts the minterms to binary notation
+            if (j % 2 == 1)
             {
                 temp->bin[k] = 1;
-                temp->noofones++;       //the number of ones in binary notation
+                temp->noofones++;
             }
             else
             {
@@ -82,8 +111,9 @@ int main()
             k++;
         }
     }
-    temp->right = NULL;
-    arrange();      //various functions are called according to their needs
+    temp->right = NULL; // Ujung node adalah NULL
+
+    arrange();          //Pemanggilan fungsi-fungsi menurut kebutuhannya
     store_minterms();
     group1();
     disp();
@@ -93,8 +123,8 @@ int main()
     {
         further_groupings();
     }
-    save->right = NULL;           //storing null value in link field of list storing prime implicants
-    printf("No pairs formed hence no further calculation required\n\n");
+    save->right = NULL;          // Menyimpan nilai NULL di link field of list yang menyimpan implikan utama
+    printf("Tidak ada pasangan yang terbentuk sehingga tidak diperlukan perhitungan lebih lanjut\n\n");
     end_loop(improot);
     collect();
     display_implicants();
@@ -108,7 +138,7 @@ int main()
     return 0;
 }
 
-void arrange()          //arranging the minterms in increasing order of magnitude
+void arrange()          // Mengurutkan minterm berdasarkan besarnya
 {
     struct node* temp1, * temp2;
     temp1 = temp2 = root;
@@ -117,7 +147,7 @@ void arrange()          //arranging the minterms in increasing order of magnitud
         temp2 = root;
         while (temp2 != NULL)
         {
-            if (temp1->data[0] < temp2->data[0])       //if not in order their values are exchanged with swap function
+            if (temp1->data[0] < temp2->data[0])       // Jika tidak urut maka mereka ditukar posisinya dengan fungsi swap
             {
                 swap(temp1, temp2);
             }
@@ -125,13 +155,33 @@ void arrange()          //arranging the minterms in increasing order of magnitud
         }
         if (temp1->right == NULL)
         {
-            limit = temp1->data[0];           //the magnitude of the last minterm is recorded later for prime implicants table
+            // ??????
+            limit = temp1->data[0];           // Besarnya minterm terakhir dicatat kemudian untuk tabel implikan utama
         }
         temp1 = temp1->right;
     }
 }
 
-void store_minterms()       //array to store all the minterms
+void swap(struct node* temp1, struct node* temp2)        // Fungsi menukar semua data dari dua node
+{
+    int x, y, i = 0;
+    i = var;
+    for (i = 0; i < var; i++)      // Notasi biner ditukar
+    {
+        y = temp1->bin[i];
+        temp1->bin[i] = temp2->bin[i];
+        temp2->bin[i] = y;
+    }
+    y = temp1->noofones;          // Jumlah angka 1 ditukar
+    temp1->noofones = temp2->noofones;
+    temp2->noofones = y;
+
+    x = temp1->data[0];           // data(minterm) ditukar
+    temp1->data[0] = temp2->data[0];
+    temp2->data[0] = x;
+}
+
+void store_minterms()       //Array untuk menyimpan seluruh minterm
 {
     int i = 0;
     struct node* temp;
@@ -144,25 +194,7 @@ void store_minterms()       //array to store all the minterms
     }
 }
 
-void swap(struct node* temp1, struct node* temp2)        //swapping all the data of two nodes
-{
-    int x, y, i = 0;
-    i = var;
-    for (i = 0; i < var; i++)      //binary notation is exchanged
-    {
-        y = temp1->bin[i];
-        temp1->bin[i] = temp2->bin[i];
-        temp2->bin[i] = y;
-    }
-    y = temp1->noofones;          //no. of ones is exchanged
-    temp1->noofones = temp2->noofones;
-    temp2->noofones = y;
-    x = temp1->data[0];           //data(minterm) is exchanged
-    temp1->data[0] = temp2->data[0];
-    temp2->data[0] = x;
-}
-
-void group1()       //where the minterms are arranged according to the number of ones
+void group1()       // Minterms diatur sesuai dengan jumlah angka 1 pada notasi biner
 {
     int i, count = 0, j, k = 0;
     struct node* temp, * next;
@@ -173,7 +205,7 @@ void group1()       //where the minterms are arranged according to the number of
         temp = save;
         while (temp != NULL)
         {
-            if (temp->noofones == i)       //minterms are arranged according to no. of ones , first 0 ones then 1 ones... and so on
+            if (temp->noofones == i)       // Minterm diatur menurut jumlah angka 1: dari 0, lalu 1, lalu 2, dst ...
             {
                 next->data[0] = temp->data[0];
                 k++;
@@ -191,12 +223,12 @@ void group1()       //where the minterms are arranged according to the number of
     next->right = NULL;
 }
 
-void disp()     //for displaying the various column with pairings
+void disp()     // Untuk menampilkan berbagai kolom dengan pasangannya
 {
     int i, j = min;
     struct node* temp;
     temp = root;
-    printf("\n\nColumn #%d\n\n\n", number);          //number tells us which column is being printed
+    printf("\n\nKolom #%d\n", number);          // number memberitahu kita kolom berapa yang sedang dicetak
     while (temp->right != NULL)
     {
         printf("%d\t", temp->data[0]);
@@ -210,8 +242,9 @@ void disp()     //for displaying the various column with pairings
     temp->right = NULL;
     number++;
 }
+//---------------------------------------------------------------------------------------------------//
 
-void end_loop(struct node* ptr)         //reducing the number of nodes in a list with one extra node
+void end_loop(struct node* ptr)         // Mengurangi jumlah node dalam list dengan satu node tambahan
 {
     struct node* temp;
     temp = ptr;
@@ -222,17 +255,17 @@ void end_loop(struct node* ptr)         //reducing the number of nodes in a list
     temp->right = NULL;
 }
 
-void further_groupings()    //grouping based on difference in binary notation
+void further_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan notasi biner
 {
     int i, count, k, j, x;
     struct node* temp, * next, * p, * imp;
     check = 0;
-    if (columns == 2)      //for second column
+    if (columns == 2)      // Untuk kolom kedua
     {
         imp = improot = (struct node*)malloc(sizeof(struct node));
         p = head;
     }
-    else        //for other columns
+    else        // Untuk kolom lain seterusnya
     {
         imp = save;
         root = head;
@@ -240,47 +273,47 @@ void further_groupings()    //grouping based on difference in binary notation
     }
     temp = root;
     implicants(root);
-    printf("\n\nColumn #%d\n\n\n", number);
+    printf("\n\nKolom #%d\n", number);
     while (temp != NULL)
     {
         next = temp->right;
         while (next != NULL)
         {
             count = 0;
-            if (next->noofones - temp->noofones == 1)        //if two terms differ in their no. of ones by one
+            if (next->noofones - temp->noofones == 1)        // Jika dua term berbeda jumlah angka 1 nya sebesar satu
             {
                 for (i = 0; i < var; i++)
                 {
                     if (temp->bin[i] != next->bin[i])
                     {
-                        k = i;            //the place in which they differ is noted
+                        k = i;            //tempat di mana mereka(term) yang berbeda tersebut (dari atas) dicatat
                         count++;
                     }
                 }
             }
-            if (count == 1)        //checks if the two terms differ by one place in binary notation
+            if (count == 1)        // Memeriksa apakah kedua term berbeda hanya pada satu tempat dalam notasi biner
             {
-                temp->isimplicant = 0;        //if they do then they are not a prime implicant
+                temp->isimplicant = 0;        //Jika ya maka mereka bukan implikan utama
                 next->isimplicant = 0;
                 check++;
                 for (i = 0; i < var; i++)
                 {
-                    p->bin[i] = temp->bin[i];         //binary notation is stored
+                    p->bin[i] = temp->bin[i];         // Notasi biner disimpan
                 }
                 p->bin[k] = -1;
                 x = 0;
-                for (j = 0; j < columns / 2; j++)            //data from first term is stored
+                for (j = 0; j < columns / 2; j++)            // data dari term pertama disimpan
                 {
                     p->data[x] = temp->data[j];
                     x++;
                 }
-                for (j = 0; j < columns / 2; j++)            //data from second term is stored
+                for (j = 0; j < columns / 2; j++)            // data dari term kedua disimpan
                 {
                     p->data[x] = next->data[j];
                     x++;
                 }
                 p->noofones = temp->noofones;
-                for (j = 0; j < columns; j++)      //the pair formed is displayed
+                for (j = 0; j < columns; j++)      // Pasangan yang dihasilkan ditampilkan
                 {
                     printf("%d,", p->data[j]);
                 }
@@ -294,21 +327,22 @@ void further_groupings()    //grouping based on difference in binary notation
                         printf("%d", p->bin[i]);
                 }
                 printf("\n");
-                p = p->right = (struct node*)malloc(sizeof(struct node));           // one extra node that is to be deleted
+                p = p->right = (struct node*)malloc(sizeof(struct node));           // Node tambahan yang ada untuk dihapus
             }
             next = next->right;
         }
         temp = temp->right;
     }
     p->right = NULL;
+
     if (check != 0)
     {
-        end_loop(head);     //extra node is deleted
+        end_loop(head);     // Node ekstra dihapus
     }
     temp = root;
-    while (temp != NULL)           //for selecting the prime implicants
+    while (temp != NULL)           // Loop untuk memilih iplikan utama
     {
-        if (temp->isimplicant == 1)        // if term is a prime implicant it is stored separately in list with head pointer improot
+        if (temp->isimplicant == 1)        // Jika term adalah implikan utama, ia disimpan secara terpisah dalam list dengan head pointer improot 
         {
             i = 0;
             for (i = 0; i < columns / 2; i++)
@@ -329,17 +363,28 @@ void further_groupings()    //grouping based on difference in binary notation
     number++;
 }
 
-void display_implicants()       //displays the implicants
+void implicants(struct node* ptr)       // Inisialisasi setiap term sebagai implikan utama
+{
+    struct node* temp;
+    temp = ptr;
+    while (temp != NULL)
+    {
+        temp->isimplicant = 1;
+        temp = temp->right;
+    }
+}
+
+void display_implicants()       // Menampilkan seluruh implikannya
 {
     int i = 0;
     struct node* temp;
     temp = improot;
-    printf("\n\nThe prime implicants are: \n\n");
+    printf("\n\nImplikan utamanya adalah: \n\n");
     while (temp != NULL)
     {
         i = 0;
         i = var - 1;
-        while (i >= 0)     //displays the binary notation
+        while (i >= 0)     // Menampilkan notasi binernya
         {
             if (temp->bin[i] == -1)
             {
@@ -353,7 +398,7 @@ void display_implicants()       //displays the implicants
         }
         printf("\t\t");
         i = 0;
-        while (temp->data[i] != -1)        //displays the minterm pairs
+        while (temp->data[i] != -1)        // Menampilkan pasangan mintermnya
         {
             printf("%d,", temp->data[i]);
             i++;
@@ -365,18 +410,7 @@ void display_implicants()       //displays the implicants
     }
 }
 
-void implicants(struct node* ptr)       //initializing each term as a prime implicant
-{
-    struct node* temp;
-    temp = ptr;
-    while (temp != NULL)
-    {
-        temp->isimplicant = 1;
-        temp = temp->right;
-    }
-}
-
-void collect()          //reduces the terms that occur more than once to a single
+void collect()          // Mengurangi term yang muncul lebih dari satu kali menjadi sekali
 {
     int common = 0, i;
     struct node* temp1, * temp2, * temp3;
@@ -387,7 +421,7 @@ void collect()          //reduces the terms that occur more than once to a singl
         while (temp2 != NULL)
         {
             common = 0;
-            for (i = 0; i < var; i++)          //if their binary notation is same one will be deleted
+            for (i = 0; i < var; i++)          // Jika notasi biner mereka sama maka akan dihapus
             {
                 if (temp2->bin[i] == temp1->bin[i])
                 {
@@ -397,7 +431,7 @@ void collect()          //reduces the terms that occur more than once to a singl
             if (common == var)
             {
                 temp3 = improot;
-                while (temp3->right != temp2)      //the repeated term is deleted
+                while (temp3->right != temp2)      // Term yang berulang dihapus
                 {
                     temp3 = temp3->right;
                 }
@@ -415,12 +449,12 @@ void variables()            //stores variables(alphabets)
     int i;
     for (i = 0; i < 26; i++)
     {
-        a[i] = 65 + i;      //variables
-        b[i] = 97 + i;      //their compliments
+        a[i] = 65 + i;      // Variabel normal huruf kapital dengan ASCII
+        b[i] = 97 + i;      // Komplemennya huruf kecil
     }
 }
 
-void convert()          //it converts the binary notation of each term to variables
+void convert()          // Konversi notasi biner setiap term ke variabel
 {
     int i, j;
     struct node* temp;
@@ -440,7 +474,7 @@ void convert()          //it converts the binary notation of each term to variab
                 temp->term[j] = a[i];
                 j++;
             }
-            if (temp->bin[i] == "-")
+            if (temp->bin[i] == -1)
             {
                 j++;
             }
@@ -449,11 +483,11 @@ void convert()          //it converts the binary notation of each term to variab
     }
 }
 
-void func()         //displays the minimized function in SOP form
+void func()         //Menampilkan fungsi yang telah diminimisasi dalam bentuk Sum Of Products (SOP)
 {
     struct node* temp;
     temp = fin;
-    printf("\n\nThe minimized function is : ");
+    printf("\n\nFungsi yang telah diminimisasi adalah : ");
     while (temp != NULL)
     {
         printf("%s", temp->term);
@@ -466,7 +500,7 @@ void func()         //displays the minimized function in SOP form
     printf("\n\n");
 }
 
-void implicants_table()         //function for creating prime implicants table as well as selecting essential prime implicants
+void implicants_table()         // Fungsi untuk membuat tabel implikan utama sekaligus memilih implikan utama esensial
 {
     struct node* temp;
     int i, j, k, m, n, x, y, count = 0, count2 = 0, a = 0;
@@ -474,7 +508,7 @@ void implicants_table()         //function for creating prime implicants table a
     {
         for (j = 0; j <= limit; j++)
         {
-            imptable[i][j] = 0;           //0 or - is placed in all places of a table
+            imptable[i][j] = 0;           // 0 atau - ditempatkan pada seluruh bagiantabel
         }
     }
     i = 0;
@@ -486,23 +520,23 @@ void implicants_table()         //function for creating prime implicants table a
         k = 0;
         while (temp->data[k] != -1)
         {
-            imptable[i][temp->data[k]] = 1;  // 1 or X is placed for the column with same index as that of the number in the pair
+            imptable[i][temp->data[k]] = 1;  // 1 atau X ditempatkan untuk kolom dengan indeks yang sama dengan angka dalam pasangannya
             k++;
         }
         i++;
         temp = temp->right;
     }
-    printf("\n\n\t\t\tPrime Implicants Table\n\n\n");
+    printf("\n\n\t\t\tTabel Implikan Prima\n\n\n");
     temp = improot;
     i = 0;
     printf(" ");
     while (minterms[i] != -1)
     {
-        printf("%d\t", minterms[i]);         //the minterms are displayed in row
+        printf("%d\t", minterms[i]);         // Mintermnya ditampilkan dalam satu baris
         i++;
     }
     printf("\n\n");
-    for (i = 0; i < counter; i++)          //X and - are placed for the terms with corresponding minterm values
+    for (i = 0; i < counter; i++)          //X dan - ditempatkan untuk term yang memiliki nilai minterm yang sesuai
     {
         printf(" ");
         a = 0;
@@ -523,7 +557,7 @@ void implicants_table()         //function for creating prime implicants table a
             }
         }
         y = 0;
-        while (temp->data[y] != -1)        //prints the minterm pair
+        while (temp->data[y] != -1)        // Mencetak pasangan mintermnya
         {
             printf("%d,", temp->data[y]);
             y++;
@@ -533,7 +567,7 @@ void implicants_table()         //function for creating prime implicants table a
         printf("\n\n");
     }
     printf("\n\n");
-    for (i = 0; i < counter; i++)      //for finding essential prime implicants
+    for (i = 0; i < counter; i++)      // Untuk menemukan implikan utama esensial
     {
         for (j = 0; j <= limit; j++)
         {
@@ -544,12 +578,12 @@ void implicants_table()         //function for creating prime implicants table a
                 x = i;
                 for (k = 0; k < counter; k++)
                 {
-                    if (imptable[k][j] == 1)       //checks if there is only one X in a column
+                    if (imptable[k][j] == 1)       // Cek apakah hanya ada satu X dalam kolomnya
                     {
                         count++;
                     }
                 }
-                if (count == 1)  //places - in place of X in every column of the table whose one row contains only one X in a column
+                if (count == 1)  // Menaruh - sebagai pengganti X di setiap kolom tabel yang satu barisnya hanya berisi satu X dalam satu kolom
                 {
                     essential[t] = x;
                     t++;
@@ -571,9 +605,9 @@ void implicants_table()         //function for creating prime implicants table a
     i = 0;
 }
 
-void other_implicants()     //after finding the essential prime implicants other terms necessary are marked
+void other_implicants()     // Setelah menemukan implikan prima esensial, term lain yang diperlukan ditandai
 {
-    no = 0;           //to check if any term is found in each iteration
+    no = 0;           // Untuk mengecek apakah ada term yang ditemukan pada tiap iterasi
     int count1 = 0, count2 = 0;
     int i, j;
     for (i = 0; i < counter; i++)
@@ -581,19 +615,19 @@ void other_implicants()     //after finding the essential prime implicants other
         count1 = 0;
         for (j = 0; j <= limit; j++)
         {
-            if (imptable[i][j] == 1)       //no. of X's or 1's are calculated
+            if (imptable[i][j] == 1)       // Masing-masing jumlah X dan 1 dihitung
             {
                 no++;
                 count1++;
             }
         }
-        if (count1 > count2)       //to find the term with maximum X's in a row
+        if (count1 > count2)       // Untuk menemukan term dengan jumlah X maksimum dalam satu baris
         {
             essential[t] = i;
             count2 = count1;
         }
     }
-    for (j = 0; j <= limit; j++)           //removing the X's in the row as well a those X's which are in same column
+    for (j = 0; j <= limit; j++)           // Menghapus X di baris serta X yang ada di kolom yang sama
     {
         if (imptable[essential[t]][j] == 1)
         {
@@ -605,13 +639,13 @@ void other_implicants()     //after finding the essential prime implicants other
     }
     t++;
     essential[t] = -1;
-    if (no > 0)            //if one or more terms is found the function is called again otherwise not
+    if (no > 0)            // Jika satu atau lebih istilah ditemukan, fungsi dipanggil lagi (rekursi)
     {
         other_implicants();
     }
 }
 
-void final_terms()          //in this function all the terms in the minimized expression are stored in a linked list
+void final_terms()          // Dalam fungsi ini semua term dalam fungsi yang diminimalkan disimpan di linked list
 {
     int i = 0, j, c = 0, x;
     struct node* temp, * ptr;
@@ -620,18 +654,18 @@ void final_terms()          //in this function all the terms in the minimized ex
     {
         ptr = improot;
         x = essential[i];
-        for (j = 0; j < x; j++)        //so that pointer points to the node whose index was stored in array named essential
+        for (j = 0; j < x; j++)        // Agar pointer menunjuk ke node yang indeksnya disimpan dalam array bernama essential
         {
             ptr = ptr->right;
         }
         j = 0;
-        while (ptr->data[j] != -1)         // the data of the node is stored
+        while (ptr->data[j] != -1)         // Data dari node disimpan
         {
             temp->data[j] = ptr->data[j];
             j++;
         }
         temp->data[j] = -1;
-        for (j = 0; j < var; j++)          //the binary code is stored
+        for (j = 0; j < var; j++)          // Notasi binernya disimpan
         {
             temp->bin[j] = ptr->bin[j];
         }
