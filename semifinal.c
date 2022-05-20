@@ -19,14 +19,14 @@
 
 struct node
 {
-    int data[257], bin[26], noofones, isimplicant, minarr[1000];
+    int data[257], bin[26], jumlah1, isimplicant, minarr[1000];
     char term[26];
     struct node* right;
 };
 
 struct node* root, * head, * improot, * save, * fin;
 int var, min, number = 1, columns = 2, check = 1, limit, imptable[100][100], counter = 0, essential[1000], t = 0, no = 0, minterms[1000];
-char a[26], b[26];       //variable names are stored as alphabets, can be modified to work for more variables
+char capital[26], complement[26];       //variable names are stored as alphabets, can be modified to work for more variables
 
 void arrange();                         //the minterms are arranged according to their magnitude
 void swap(struct node*, struct node*);  //data of two nodes is swapped
@@ -39,13 +39,13 @@ void end_loop(struct node*);            //the extra node in a list is deleted
 void collect();                         //converts the term from binary notation to variables (OUTPUT)
 void implicants(struct node*);          //initializes each term as an implicant
 void display_implicants();              //the implicants are displayed
-void variables();               //the variables for the function are stored
-void implicants_table();        //the prime implicants table is formed and essential implicants are found
-void other_implicants();    //the prime implicants other than the essential ones are collected
-void final_terms();         //the final terms in the minimized function are noted
+void variables();                       //the variables for the function are stored
+void implicants_table();                //the prime implicants table is formed and essential implicants are found
+void other_implicants();                //the prime implicants other than the essential ones are collected
+void final_terms();                     //the final terms in the minimized function are noted
 
-void convert();             //reduces the prime implicants which occur more than once to one ??
-void func();                //the minimized function is displayed (OUTPUT)
+void convert();                 //reduces the prime implicants which occur more than once to one ??
+void function();                //the minimized function is displayed (OUTPUT)
 
 int main()
 {
@@ -69,7 +69,7 @@ int main()
     scanf("%d", &temp->data[0]);                     // Minterm pertama disimpan
 
     j = temp->data[0];
-    temp->noofones = 0;
+    temp->jumlah1 = 0;
     x = var;
     k = 0;
     while (x--)      // Konversi minterm ke notasi biner
@@ -77,7 +77,7 @@ int main()
         if (j % 2 == 1)
         {
             temp->bin[k] = 1;
-            temp->noofones++;   // Jumlah angka 1 dalam notasi biner dihitung
+            temp->jumlah1++;   // Jumlah angka 1 dalam notasi biner dihitung
         }
         else
         {
@@ -93,7 +93,7 @@ int main()
         scanf("%d", &temp->data[0]);
 
         j = temp->data[0];
-        temp->noofones = 0;
+        temp->jumlah1 = 0;
         x = var;
         k = 0;
         while (x--)                  // Konversi minterm lainnya ke notasi biner
@@ -101,7 +101,7 @@ int main()
             if (j % 2 == 1)
             {
                 temp->bin[k] = 1;
-                temp->noofones++;
+                temp->jumlah1++;
             }
             else
             {
@@ -134,7 +134,7 @@ int main()
     final_terms();
     end_loop(fin);
     convert();
-    func();
+    function();
     return 0;
 }
 
@@ -172,9 +172,9 @@ void swap(struct node* temp1, struct node* temp2)        // Fungsi menukar semua
         temp1->bin[i] = temp2->bin[i];
         temp2->bin[i] = y;
     }
-    y = temp1->noofones;          // Jumlah angka 1 ditukar
-    temp1->noofones = temp2->noofones;
-    temp2->noofones = y;
+    y = temp1->jumlah1;          // Jumlah angka 1 ditukar
+    temp1->jumlah1 = temp2->jumlah1;
+    temp2->jumlah1 = y;
 
     x = temp1->data[0];           // data(minterm) ditukar
     temp1->data[0] = temp2->data[0];
@@ -205,7 +205,7 @@ void group1()       // Minterms diatur sesuai dengan jumlah angka 1 pada notasi 
         temp = save;
         while (temp != NULL)
         {
-            if (temp->noofones == i)       // Minterm diatur menurut jumlah angka 1: dari 0, lalu 1, lalu 2, dst ...
+            if (temp->jumlah1 == i)       // Minterm diatur menurut jumlah angka 1: dari 0, lalu 1, lalu 2, dst ...
             {
                 next->data[0] = temp->data[0];
                 k++;
@@ -213,7 +213,7 @@ void group1()       // Minterms diatur sesuai dengan jumlah angka 1 pada notasi 
                 {
                     next->bin[j] = temp->bin[j];
                 }
-                next->noofones = temp->noofones;
+                next->jumlah1 = temp->jumlah1;
                 next = next->right = (struct node*)malloc(sizeof(struct node));
             }
             temp = temp->right;
@@ -280,7 +280,7 @@ void further_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan 
         while (next != NULL)
         {
             count = 0;
-            if (next->noofones - temp->noofones == 1)        // Jika dua term berbeda jumlah angka 1 nya sebesar satu
+            if (next->jumlah1 - temp->jumlah1 == 1)        // Jika dua term berbeda jumlah angka 1 nya sebesar satu
             {
                 for (i = 0; i < var; i++)
                 {
@@ -312,7 +312,7 @@ void further_groupings()    // Pengelompokan lebih lanjut berdasarkan perbedaan 
                     p->data[x] = next->data[j];
                     x++;
                 }
-                p->noofones = temp->noofones;
+                p->jumlah1 = temp->jumlah1;
                 for (j = 0; j < columns; j++)      // Pasangan yang dihasilkan ditampilkan
                 {
                     printf("%d,", p->data[j]);
@@ -449,8 +449,8 @@ void variables()            //stores variables(alphabets)
     int i;
     for (i = 0; i < 26; i++)
     {
-        a[i] = 65 + i;      // Variabel normal huruf kapital dengan ASCII
-        b[i] = 97 + i;      // Komplemennya huruf kecil
+        capital[i] = 65 + i;      // Variabel normal huruf kapital dengan ASCII
+        complement[i] = 97 + i;      // Komplemennya huruf kecil
     }
 }
 
@@ -466,12 +466,12 @@ void convert()          // Konversi notasi biner setiap term ke variabel
         {
             if (temp->bin[i] == 0)
             {
-                temp->term[j] = b[i];
+                temp->term[j] = complement[i];
                 j++;
             }
             if (temp->bin[i] == 1)
             {
-                temp->term[j] = a[i];
+                temp->term[j] = capital[i];
                 j++;
             }
             if (temp->bin[i] == -1)
@@ -483,7 +483,7 @@ void convert()          // Konversi notasi biner setiap term ke variabel
     }
 }
 
-void func()         //Menampilkan fungsi yang telah diminimisasi dalam bentuk Sum Of Products (SOP)
+void function()         //Menampilkan fungsi yang telah diminimisasi dalam bentuk Sum Of Products (SOP)
 {
     struct node* temp;
     temp = fin;
